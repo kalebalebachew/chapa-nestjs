@@ -5,7 +5,7 @@ import {
   HttpException,
   BadRequestException,
 } from '@nestjs/common';
-import { customAlphabet } from 'nanoid/async';
+import { customAlphabet } from 'nanoid';
 import { alphanumeric } from 'nanoid-dictionary';
 import { CHAPA_OPTIONS } from './constants';
 import { ChapaUrls } from './enums';
