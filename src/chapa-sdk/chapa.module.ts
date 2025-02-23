@@ -1,19 +1,12 @@
 import { Module, DynamicModule, Provider, Global } from '@nestjs/common';
 import { ChapaService } from './chapa.service';
-import {
-  CHAPA_OPTIONS,
-} from './constants';
-import {
-  ChapaOptions,
-  ChapaAsyncOptions,
-  ChapaOptionsFactory,
-} from './interfaces';
-import { createChapaProviders } from './chapa.providers';
+import { CHAPA_OPTIONS } from './constants';
+import { ChapaOptions, ChapaAsyncOptions, ChapaOptionsFactory } from './interfaces';
 import { HttpModule } from '@nestjs/axios';
 
 @Global()
 @Module({
-  imports:[HttpModule],
+  imports: [HttpModule],
   providers: [ChapaService],
   exports: [ChapaService],
 })
@@ -21,12 +14,17 @@ export class ChapaModule {
   /**
    * Registers a configured Chapa Module for import into the current module
    */
-  public static register(
-    options: ChapaOptions,
-  ): DynamicModule {
+  public static register(options: ChapaOptions): DynamicModule {
     return {
       module: ChapaModule,
-      providers: createChapaProviders(options),
+      providers: [
+        {
+          provide: CHAPA_OPTIONS,
+          useValue: options,
+        },
+        ChapaService,
+      ],
+      exports: [ChapaService],
     };
   }
 
@@ -34,14 +32,15 @@ export class ChapaModule {
    * Registers a configured Chapa Module for import into the current module
    * using dynamic options (factory, etc)
    */
-  public static registerAsync(
-    options: ChapaAsyncOptions,
-  ): DynamicModule {
+  public static registerAsync(options: ChapaAsyncOptions): DynamicModule {
     return {
       module: ChapaModule,
+      imports: options.imports || [],
       providers: [
-        ...this.createProviders(options),
+        this.createOptionsProvider(options),
+        ChapaService,
       ],
+      exports: [ChapaService],
     };
   }
 
