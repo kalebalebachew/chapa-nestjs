@@ -12,7 +12,7 @@ import { HttpModule } from '@nestjs/axios';
 })
 export class ChapaModule {
   /**
-   * Registers a configured Chapa Module for import into the current module
+   * Synchronous registration.
    */
   public static register(options: ChapaOptions): DynamicModule {
     return {
@@ -29,55 +29,24 @@ export class ChapaModule {
   }
 
   /**
-   * Registers a configured Chapa Module for import into the current module
-   * using dynamic options (factory, etc)
+   * Asynchronous registration using dynamic options.
    */
   public static registerAsync(options: ChapaAsyncOptions): DynamicModule {
+    const chapaOptionsProvider: Provider = {
+      provide: CHAPA_OPTIONS,
+      useFactory: options.useFactory
+        ? options.useFactory
+        : async (optionsFactory: ChapaOptionsFactory) => {
+            return await optionsFactory.createChapaOptions();
+          },
+      inject: options.useFactory ? (options.inject || []) : [options.useExisting || options.useClass],
+    };
+
     return {
       module: ChapaModule,
       imports: options.imports || [],
-      providers: [
-        this.createOptionsProvider(options),
-        ChapaService,
-      ],
+      providers: [chapaOptionsProvider, ChapaService],
       exports: [ChapaService],
     };
   }
-
-  private static createProviders(
-    options: ChapaAsyncOptions,
-  ): Provider[] {
-    if (options.useExisting || options.useFactory) {
-      return [this.createOptionsProvider(options)];
-    }
-
-    return [
-      this.createOptionsProvider(options),
-      {
-        provide: options.useClass,
-        useClass: options.useClass,
-      },
-    ];
-  }
-
-  private static createOptionsProvider(
-    options: ChapaAsyncOptions,
-  ): Provider {
-    if (options.useFactory) {
-      return {
-        provide: CHAPA_OPTIONS,
-        useFactory: options.useFactory,
-        inject: options.inject || [],
-      };
-    }
-
-    // For useExisting...
-    return {
-  provide: CHAPA_OPTIONS,
-      useFactory: async (optionsFactory: ChapaOptionsFactory) =>
-        await optionsFactory.createChapaOptions(),
-      inject: [options.useExisting || options.useClass],
-    };
-  }
-
- }
+}
