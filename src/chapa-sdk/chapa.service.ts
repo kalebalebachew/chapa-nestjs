@@ -5,8 +5,7 @@ import {
   HttpException,
   BadRequestException,
 } from '@nestjs/common';
-const { customAlphabet } = require('nanoid')
-import { alphanumeric } from 'nanoid-dictionary';
+import { v4 as uuidv4 } from 'uuid';
 import { CHAPA_OPTIONS } from './constants';
 import { ChapaUrls } from './enums';
 import {
@@ -156,14 +155,9 @@ export class ChapaService implements IChapaService {
       generateTransactionReferenceOptions.prefix
         ? generateTransactionReferenceOptions.prefix
         : 'TX';
-    const size =
-      generateTransactionReferenceOptions &&
-      generateTransactionReferenceOptions.size
-        ? generateTransactionReferenceOptions.size
-        : 15;
-    const nanoid = customAlphabet(alphanumeric, size);
-    const reference = await nanoid();
-    return `${prefix}-${reference.toUpperCase()}`;
+
+    const reference = uuidv4().replace(/-/g, '').toUpperCase();
+    return `${prefix}-${reference}`;
   }
 
   async getBanks(): Promise<GetBanksResponse> {
